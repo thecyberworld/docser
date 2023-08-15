@@ -1,5 +1,0 @@
-package scanner
-
-func ScanEngine() {
-
-}
