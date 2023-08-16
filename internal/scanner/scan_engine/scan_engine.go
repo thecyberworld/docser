@@ -2,6 +2,8 @@ package scan_engine
 
 import (
 	"fmt"
+	"io"
+	"strings"
 
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -20,7 +22,9 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 		fmt.Printf("Error getting repository configuration: %v\n", err)
 		return
 	}
-	fmt.Print(repoConfig.Branches)
+	for branch := range repoConfig.Branches {
+		fmt.Println("Branch ", branch)
+	}
 	// Open the repository's HEAD reference to get the reference's hash
 	headRef, err := repo.Head()
 	if err != nil {
@@ -49,6 +53,15 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 	err = commitIter.ForEach(func(commitObj *object.Commit) error {
 		fmt.Println("Commit:", commitObj.Hash)
 
+		foundBranch := "Unknown"
+		for _, ref := range refs {
+			if ref.Hash() == commitObj.Hash {
+				foundBranch = ref.Name().Short()
+				break
+			}
+		}
+		fmt.Println("Belongs to branch:", foundBranch)
+
 		// Access the files in the commit using commitObj.Files() and iterate through them
 		fileIter, err := commitObj.Files()
 		if err != nil {
@@ -59,6 +72,26 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 
 		err = fileIter.ForEach(func(file *object.File) error {
 			fmt.Println("File:", file.Name)
+
+			// Check if the file extension corresponds to text-based formats
+			if isTextFile(file.Name) {
+				// Open the file for reading
+				fileReader, err := file.Reader()
+				if err != nil {
+					return err
+				}
+				defer fileReader.Close()
+
+				// Read the contents of the file
+				fileContents, err := io.ReadAll(fileReader)
+				if err != nil {
+					return err
+				}
+				fmt.Println("Contents:", string(fileContents))
+			} else {
+				fmt.Println("Binary file - skipping contents.")
+			}
+
 			return nil
 		})
 		if err != nil {
@@ -77,3 +110,16 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 		fmt.Println("Reference:", reference)
 	}
 }
+
+// isTextFile checks if the file extension corresponds to a text-based format
+func isTextFile(filename string) bool {
+	textFileExtensions := []string{".md", ".txt", ".php", ".html", ".css", ".js"} // Add more extensions as needed
+	for _, ext := range textFileExtensions {
+		if strings.HasSuffix(filename, ext) {
+			return true
+		}
+	}
+	return false
+}
+
+// To-Do -> Break the code into smaller functions

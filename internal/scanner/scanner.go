@@ -38,7 +38,8 @@ func InitiateScan(repositoryPath string) {
 		}
 	} else {
 		if isGitRepository(repositoryPath) {
-			fmt.Printf("[+] Initiating Scan in %s", repositoryPath)
+			fmt.Printf("[+] Initiating Scan in %s \n", repositoryPath)
+			startScanEngine(repositoryPath)
 		}
 	}
 }
