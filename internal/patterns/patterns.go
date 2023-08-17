@@ -25,6 +25,7 @@ type PatternInfo struct {
 var regexPatterns = []PatternInfo{
 	{regexp.MustCompile(`Hi`), "Hi"},
 	{regexp.MustCompile(`world`), "world"},
+	{regexp.MustCompile(`function`), "function"},
 }
 
 // ProcessTextFileContentsWithRegex reads and processes the contents of a text-based file using regex patterns

@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 
+	"docser/internal/patterns"
+
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -120,12 +122,13 @@ func processTextFileContents(file *object.File) error {
 		return err
 	}
 	defer fileReader.Close()
+	fmt.Println(patterns.ProcessTextFileContentsWithRegex(file))
 
 	fileContents, err := io.ReadAll(fileReader)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Contents: \n", string(fileContents))
+	fmt.Println("Contents: \n", string(string(fileContents)[:10]))
 	return nil
 }
 
