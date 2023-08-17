@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 
+	"docser/internal/patterns"
+
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -96,9 +98,10 @@ func processCommitFiles(commitObj *object.Commit) error {
 
 	return fileIter.ForEach(func(file *object.File) error {
 		fmt.Println("File:", file.Name)
+		fileName := file.Name
 
 		// Check if the file extension corresponds to text-based formats
-		if isTextFile(file.Name) {
+		if isTextFile(fileName) {
 			// Access and process the contents of the file
 			err := processTextFileContents(file)
 			if err != nil {
@@ -119,12 +122,13 @@ func processTextFileContents(file *object.File) error {
 		return err
 	}
 	defer fileReader.Close()
+	fmt.Println(patterns.ProcessTextFileContentsWithRegex(file))
 
 	fileContents, err := io.ReadAll(fileReader)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Contents: \n", string(fileContents))
+	fmt.Println("Contents: \n", string(string(fileContents)[:10]))
 	return nil
 }
 
