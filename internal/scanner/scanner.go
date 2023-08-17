@@ -30,7 +30,7 @@ func isGitRepository(repositoryPath string) bool {
 	return true
 }
 
-func InitiateScan(repositoryPath string) {
+func InitiateScanandValidatePath(repositoryPath string) {
 	if repositoryPath == "." {
 		if isGitRepository(repositoryPath) {
 			fmt.Printf("[+] Initiating Scan in current directory.\n")

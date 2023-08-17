@@ -12,7 +12,6 @@ import (
 
 // StartScanEngine is an exported function from the ScanEngine package
 func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
-	// Your scan engine logic here
 	repository := *repo
 	configFunc := repository.Config
 
@@ -25,6 +24,7 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 	for branch := range repoConfig.Branches {
 		fmt.Println("Branch ", branch)
 	}
+
 	// Open the repository's HEAD reference to get the reference's hash
 	headRef, err := repo.Head()
 	if err != nil {
@@ -43,77 +43,94 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 	}
 
 	// Iterate through each commit in the repository
+	err = iterateCommits(repo, commit, refs)
+	if err != nil {
+		fmt.Printf("Error iterating commits: %v\n", err)
+		return
+	}
+}
+
+// iterateCommits iterates through each commit and processes files
+func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbing.Reference) error {
 	commitIter, err := repo.Log(&git.LogOptions{From: commit.Hash})
 	if err != nil {
-		fmt.Printf("Error getting commit history: %v\n", err)
-		return
+		return err
 	}
 	defer commitIter.Close()
 
-	err = commitIter.ForEach(func(commitObj *object.Commit) error {
+	return commitIter.ForEach(func(commitObj *object.Commit) error {
 		fmt.Println("Commit:", commitObj.Hash)
 
-		foundBranch := "Unknown"
-		for _, ref := range refs {
-			if ref.Hash() == commitObj.Hash {
-				foundBranch = ref.Name().Short()
-				break
-			}
-		}
+		foundBranch := getBranchName(commitObj.Hash, refs)
 		fmt.Println("Belongs to branch:", foundBranch)
 
-		// Access the files in the commit using commitObj.Files() and iterate through them
-		fileIter, err := commitObj.Files()
+		// Access and process the files in the commit
+		err := processCommitFiles(commitObj)
 		if err != nil {
-			fmt.Printf("Error getting commit files: %v\n", err)
-			return err
-		}
-		defer fileIter.Close()
-
-		err = fileIter.ForEach(func(file *object.File) error {
-			fmt.Println("File:", file.Name)
-
-			// Check if the file extension corresponds to text-based formats
-			if isTextFile(file.Name) {
-				// Open the file for reading
-				fileReader, err := file.Reader()
-				if err != nil {
-					return err
-				}
-				defer fileReader.Close()
-
-				// Read the contents of the file
-				fileContents, err := io.ReadAll(fileReader)
-				if err != nil {
-					return err
-				}
-				fmt.Println("Contents:", string(fileContents))
-			} else {
-				fmt.Println("Binary file - skipping contents.")
-			}
-
-			return nil
-		})
-		if err != nil {
-			fmt.Printf("Error iterating through files: %v\n", err)
 			return err
 		}
 
 		return nil
 	})
-	if err != nil {
-		fmt.Printf("Error iterating commits: %v\n", err)
-		return
-	}
+}
+
+// getBranchName returns the name of the branch that the commit belongs to
+func getBranchName(commitHash plumbing.Hash, refs []*plumbing.Reference) string {
+	foundBranch := "Unknown"
 	for _, ref := range refs {
-		reference := ref
-		fmt.Println("Reference:", reference)
+		if ref.Hash() == commitHash {
+			foundBranch = ref.Name().Short()
+			break
+		}
 	}
+	return foundBranch
+}
+
+// processCommitFiles accesses and processes the files in the commit
+func processCommitFiles(commitObj *object.Commit) error {
+	fileIter, err := commitObj.Files()
+	if err != nil {
+		return err
+	}
+	defer fileIter.Close()
+
+	return fileIter.ForEach(func(file *object.File) error {
+		fmt.Println("File:", file.Name)
+
+		// Check if the file extension corresponds to text-based formats
+		if isTextFile(file.Name) {
+			// Access and process the contents of the file
+			err := processTextFileContents(file)
+			if err != nil {
+				return err
+			}
+		} else {
+			fmt.Println("Binary file - skipping contents.")
+		}
+
+		return nil
+	})
+}
+
+// processTextFileContents reads and processes the contents of a text-based file
+func processTextFileContents(file *object.File) error {
+	fileReader, err := file.Reader()
+	if err != nil {
+		return err
+	}
+	defer fileReader.Close()
+
+	fileContents, err := io.ReadAll(fileReader)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Contents: \n", string(fileContents))
+	return nil
 }
 
 // isTextFile checks if the file extension corresponds to a text-based format
 func isTextFile(filename string) bool {
-	textFileExtensions := []string{".md", ".txt", ".php", ".html", ".css", ".js"} // Add more extensions as needed
+	textFileExtensions := []string{".md", ".txt", ".php", ".html", ".css", ".js", ".py"} // Use blacklist based approach for the next time
 	for _, ext := range textFileExtensions {
 		if strings.HasSuffix(filename, ext) {
 			return true
@@ -121,5 +138,3 @@ func isTextFile(filename string) bool {
 	}
 	return false
 }
-
-// To-Do -> Break the code into smaller functions

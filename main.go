@@ -22,7 +22,7 @@ func main() {
 
 	repositoryPath := *pRepoLocation
 	if repositoryPath != "" {
-		scanner.InitiateScan(repositoryPath)
+		scanner.InitiateScanandValidatePath(repositoryPath)
 	} else {
 		showHelpMenu()
 	}
