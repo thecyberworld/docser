@@ -96,9 +96,10 @@ func processCommitFiles(commitObj *object.Commit) error {
 
 	return fileIter.ForEach(func(file *object.File) error {
 		fmt.Println("File:", file.Name)
+		fileName := file.Name
 
 		// Check if the file extension corresponds to text-based formats
-		if isTextFile(file.Name) {
+		if isTextFile(fileName) {
 			// Access and process the contents of the file
 			err := processTextFileContents(file)
 			if err != nil {
