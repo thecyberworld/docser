@@ -3,10 +3,11 @@ package scan_engine
 import (
 	"fmt"
 	"io"
-	"strings"
+	"log"
 
 	"docser/internal/patterns"
 
+	"gopkg.in/h2non/filetype.v1"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -98,10 +99,9 @@ func processCommitFiles(commitObj *object.Commit) error {
 
 	return fileIter.ForEach(func(file *object.File) error {
 		fmt.Println("File:", file.Name)
-		fileName := file.Name
 
 		// Check if the file extension corresponds to text-based formats
-		if isTextFile(fileName) {
+		if isTextFile(file) {
 			// Access and process the contents of the file
 			err := processTextFileContents(file)
 			if err != nil {
@@ -132,13 +132,23 @@ func processTextFileContents(file *object.File) error {
 	return nil
 }
 
-// isTextFile checks if the file extension corresponds to a text-based format
-func isTextFile(filename string) bool {
-	textFileExtensions := []string{".md", ".txt", ".php", ".html", ".css", ".js", ".py"} // Use blacklist based approach for the next time
-	for _, ext := range textFileExtensions {
-		if strings.HasSuffix(filename, ext) {
-			return true
-		}
+// isTextFile checks if the file extension corresponds to a text-based format by checking magic byte of the file
+func isTextFile(file *object.File) bool {
+	fileReader, err := file.Reader() // Assuming 'Reader' is a method in your 'object.File' type
+	if err != nil {
+		log.Printf("Error opening %s: %v\n", file.Name, err)
+		return false
 	}
-	return false
+	defer fileReader.Close()
+
+	buffer := make([]byte, 261) // Read the first 261 bytes for magic number detection
+	_, err = fileReader.Read(buffer)
+	if err != nil {
+		log.Printf("Error reading %s: %v\n", file.Name, err)
+		return false
+	}
+
+	kind, _ := filetype.Match(buffer)
+
+	return kind == filetype.Unknown
 }
