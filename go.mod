@@ -2,6 +2,8 @@ module docser
 
 go 1.21.0
 
+require gopkg.in/src-d/go-git.v4 v4.13.1
+
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -16,7 +18,7 @@ require (
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/tools v0.12.0 // indirect
+	gopkg.in/h2non/filetype.v1 v1.0.5 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
-	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
