@@ -2,7 +2,6 @@ package patterns
 
 import (
 	"io"
-	"regexp"
 	"strings"
 
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -14,18 +13,6 @@ type MatchResult struct {
 	LineNumber  int
 	MatchString string
 	Pattern     string
-}
-
-// PatternInfo represents a regex pattern along with its string representation
-type PatternInfo struct {
-	Pattern       *regexp.Regexp
-	PatternString string
-}
-
-var regexPatterns = []PatternInfo{
-	{regexp.MustCompile(`Hi`), "Hi"},
-	{regexp.MustCompile(`world`), "world"},
-	{regexp.MustCompile(`function`), "function"},
 }
 
 // ProcessTextFileContentsWithRegex reads and processes the contents of a text-based file using regex patterns
@@ -46,16 +33,19 @@ func ProcessTextFileContentsWithRegex(file *object.File) ([]MatchResult, error) 
 	// Iterate through each line and check for regex matches
 	lines := strings.Split(string(fileContents), "\n")
 	for lineNumber, line := range lines {
-		for _, patternInfo := range regexPatterns {
+		for _, patternInfo := range RegexPatterns {
 			regex := patternInfo.Pattern
 			if regex.MatchString(line) {
-				matchResult := MatchResult{
-					FileName:    file.Name,
-					LineNumber:  lineNumber + 1, // Line numbers are 1-based
-					MatchString: line,
-					Pattern:     patternInfo.PatternString,
+				submatches := regex.FindStringSubmatch(line)
+				if len(submatches) > 0 {
+					matchResult := MatchResult{
+						FileName:    file.Name,
+						LineNumber:  lineNumber + 1, // Line numbers are 1-based
+						MatchString: submatches[0],
+						Pattern:     patternInfo.Description,
+					}
+					matchResults = append(matchResults, matchResult)
 				}
-				matchResults = append(matchResults, matchResult)
 			}
 		}
 	}

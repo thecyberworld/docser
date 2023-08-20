@@ -2,7 +2,6 @@ package scan_engine
 
 import (
 	"fmt"
-	"io"
 	"log"
 
 	"docser/internal/patterns"
@@ -115,20 +114,9 @@ func processCommitFiles(commitObj *object.Commit) error {
 	})
 }
 
-// processTextFileContents reads and processes the contents of a text-based file
+// processTextFileContents call file processing and regex matching function
 func processTextFileContents(file *object.File) error {
-	fileReader, err := file.Reader()
-	if err != nil {
-		return err
-	}
-	defer fileReader.Close()
 	fmt.Println(patterns.ProcessTextFileContentsWithRegex(file))
-
-	fileContents, err := io.ReadAll(fileReader)
-	if err != nil {
-		return err
-	}
-	fmt.Println("Contents: \n", string(string(fileContents)[:10]))
 	return nil
 }
 
