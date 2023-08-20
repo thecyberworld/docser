@@ -41,7 +41,7 @@ func ProcessTextFileContentsWithRegex(file *object.File) ([]MatchResult, error) 
 					matchResult := MatchResult{
 						FileName:    file.Name,
 						LineNumber:  lineNumber + 1, // Line numbers are 1-based
-						MatchString: line,
+						MatchString: submatches[0],
 						Pattern:     patternInfo.Description,
 					}
 					matchResults = append(matchResults, matchResult)
