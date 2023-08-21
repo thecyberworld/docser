@@ -1,8 +1,7 @@
 package patterns
 
 import (
-	"io"
-	"strings"
+	"bufio"
 
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 )
@@ -23,16 +22,15 @@ func ProcessTextFileContentsWithRegex(file *object.File) ([]MatchResult, error) 
 	}
 	defer fileReader.Close()
 
-	fileContents, err := io.ReadAll(fileReader)
-	if err != nil {
-		return nil, err
-	}
-
 	var matchResults []MatchResult
 
-	// Iterate through each line and check for regex matches
-	lines := strings.Split(string(fileContents), "\n")
-	for lineNumber, line := range lines {
+	scanner := bufio.NewScanner(fileReader)
+	lineNumber := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		lineNumber++
+
 		for _, patternInfo := range RegexPatterns {
 			regex := patternInfo.Pattern
 			if regex.MatchString(line) {
@@ -40,7 +38,7 @@ func ProcessTextFileContentsWithRegex(file *object.File) ([]MatchResult, error) 
 				if len(submatches) > 0 {
 					matchResult := MatchResult{
 						FileName:    file.Name,
-						LineNumber:  lineNumber + 1, // Line numbers are 1-based
+						LineNumber:  lineNumber, // Line numbers are 1-based
 						MatchString: submatches[0],
 						Pattern:     patternInfo.Description,
 					}
@@ -48,6 +46,10 @@ func ProcessTextFileContentsWithRegex(file *object.File) ([]MatchResult, error) 
 				}
 			}
 		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
 	return matchResults, nil
