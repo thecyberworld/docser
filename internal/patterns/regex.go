@@ -52,4 +52,5 @@ var RegexPatterns = []DefinePatternInfo{
 	{regexp.MustCompile(`SK[0-9a-fA-F]{32}`), "Twilio API Key"},
 	{regexp.MustCompile(`[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*[1-9][0-9]+-[0-9a-zA-Z]{40}`), "Twitter Access Token"},
 	{regexp.MustCompile(`[t|T][w|W][i|I][t|T][t|T][e|E][r|R].*['|\"][0-9a-zA-Z]{35,44}['|\"]`), "Twitter OAuth"},
+	// Add more regex here
 }
