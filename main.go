@@ -9,9 +9,9 @@ import (
 
 func main() {
 
-	pRepoLocation := flag.String("d", "", "Help message for directory argument")
+	pRepoLocation := flag.String("d", "", "Directory to be scanned. (Default is current directory)")
 
-	showHelp := flag.Bool("h", false, "Help Menu")
+	showHelp := flag.Bool("h", false, "Displays help menu")
 
 	flag.Parse()
 
@@ -24,11 +24,11 @@ func main() {
 	if repositoryPath != "" {
 		scanner.InitiateScanandValidatePath(repositoryPath)
 	} else {
-		showHelpMenu()
+		scanner.InitiateScanandValidatePath(".")
 	}
 }
 
 func showHelpMenu() {
-	fmt.Println("Usage: docser [options] subcommand")
+	fmt.Println("Usage: docser -d /path/to/directory ")
 	flag.PrintDefaults()
 }
