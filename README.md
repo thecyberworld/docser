@@ -5,6 +5,11 @@ Docser is a credential scanning tool similar to gitleaks custom tailored for doc
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/0xFTW/docser/pulls)
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https://github.com/0xFTW/)
 
+## Prerequisite
+
+```
+go 1.21.0
+```
 
 ## Installation
 ```
