@@ -2,7 +2,7 @@ package scanner
 
 import (
 	"docser/internal/scanner/scan_engine"
-	"fmt"
+	"log"
 	"os"
 
 	"gopkg.in/src-d/go-git.v4"
@@ -12,19 +12,19 @@ import (
 func isGitRepository(repositoryPath string) bool {
 	repo, err := git.PlainOpen(repositoryPath)
 	if err != nil {
-		fmt.Printf("[!] Error opening repository: %v\n", err)
+		log.Printf("[!] Error opening repository: %v\n", err)
 		return false
 	}
 
 	worktree, err := repo.Worktree()
 	if err != nil {
-		fmt.Printf("[!] Error getting worktree: %v\n", err)
+		log.Printf("[!] Error getting worktree: %v\n", err)
 		return false
 	}
 
 	_, err = os.Stat(worktree.Filesystem.Root())
 	if err != nil {
-		fmt.Printf("[!] Error checking repository path: %v\n", err)
+		log.Printf("[!] Error checking repository path: %v\n", err)
 		return false
 	}
 	return true
@@ -33,12 +33,12 @@ func isGitRepository(repositoryPath string) bool {
 func InitiateScanandValidatePath(repositoryPath string) {
 	if repositoryPath == "." {
 		if isGitRepository(repositoryPath) {
-			fmt.Printf("[+] Initiating Scan in current directory.\n")
+			log.Printf("[+] Initiating Scan in current directory.\n")
 			startScanEngine(repositoryPath)
 		}
 	} else {
 		if isGitRepository(repositoryPath) {
-			fmt.Printf("[+] Initiating Scan in %s \n", repositoryPath)
+			log.Printf("[+] Initiating Scan in %s \n", repositoryPath)
 			startScanEngine(repositoryPath)
 		}
 	}
@@ -47,13 +47,13 @@ func InitiateScanandValidatePath(repositoryPath string) {
 func startScanEngine(repositoryPath string) {
 	repo, err := git.PlainOpen(repositoryPath)
 	if err != nil {
-		fmt.Printf("[!] Error opening repository: %v\n", err)
+		log.Printf("[!] Error opening repository: %v\n", err)
 		return
 	}
 
 	refs, err := repo.References()
 	if err != nil {
-		fmt.Printf("[!] Error getting references: %v\n", err)
+		log.Printf("[!] Error getting references: %v\n", err)
 		return
 	}
 
@@ -63,7 +63,7 @@ func startScanEngine(repositoryPath string) {
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("[!] Error iterating through references: %v\n", err)
+		log.Printf("[!] Error iterating through references: %v\n", err)
 		return
 	}
 	// Call the StartScanEngine function from the ScanEngine package

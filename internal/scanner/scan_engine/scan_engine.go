@@ -1,7 +1,7 @@
 package scan_engine
 
 import (
-	"fmt"
+	"io"
 	"log"
 
 	"docser/internal/patterns"
@@ -20,17 +20,17 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 	// Call the repository.Config function to get the configuration and error
 	repoConfig, err := configFunc()
 	if err != nil {
-		fmt.Printf("Error getting repository configuration: %v\n", err)
+		log.Printf("Error getting repository configuration: %v\n", err)
 		return
 	}
 	for branch := range repoConfig.Branches {
-		fmt.Println("Branch ", branch)
+		log.Println("Branch ", branch)
 	}
 
 	// Open the repository's HEAD reference to get the reference's hash
 	headRef, err := repo.Head()
 	if err != nil {
-		fmt.Printf("Error getting HEAD reference: %v\n", err)
+		log.Printf("Error getting HEAD reference: %v\n", err)
 		return
 	}
 
@@ -40,14 +40,14 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 	// Get the commit object of the HEAD reference
 	commit, err := repo.CommitObject(headHash)
 	if err != nil {
-		fmt.Printf("Error getting commit: %v\n", err)
+		log.Printf("Error getting commit: %v\n", err)
 		return
 	}
 
 	// Iterate through each commit in the repository
 	err = iterateCommits(repo, commit, refs)
 	if err != nil {
-		fmt.Printf("Error iterating commits: %v\n", err)
+		log.Printf("Error iterating commits: %v\n", err)
 		return
 	}
 }
@@ -61,10 +61,10 @@ func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbin
 	defer commitIter.Close()
 
 	return commitIter.ForEach(func(commitObj *object.Commit) error {
-		fmt.Println("Commit:", commitObj.Hash)
+		log.Println("Commit:", commitObj.Hash)
 
 		foundBranch := getBranchName(commitObj.Hash, refs)
-		fmt.Println("Belongs to branch:", foundBranch)
+		log.Println("Belongs to branch:", foundBranch)
 
 		// Access and process the files in the commit
 		err := processCommitFiles(commitObj)
@@ -97,7 +97,7 @@ func processCommitFiles(commitObj *object.Commit) error {
 	defer fileIter.Close()
 
 	return fileIter.ForEach(func(file *object.File) error {
-		fmt.Println("File:", file.Name)
+		log.Println("File:", file.Name)
 
 		// Check if the file extension corresponds to text-based formats
 		if isTextFile(file) {
@@ -107,7 +107,7 @@ func processCommitFiles(commitObj *object.Commit) error {
 				return err
 			}
 		} else {
-			fmt.Println("Binary file - skipping contents.")
+			log.Println("Binary file - skipping contents.")
 		}
 
 		return nil
@@ -116,7 +116,10 @@ func processCommitFiles(commitObj *object.Commit) error {
 
 // processTextFileContents call file processing and regex matching function
 func processTextFileContents(file *object.File) error {
-	fmt.Println(patterns.ProcessTextFileContentsWithRegex(file))
+	result, err := patterns.ProcessTextFileContentsWithRegex(file)
+	if (err == nil) && (len(result) != 0) {
+		log.Println("Result", result)
+	}
 	return nil
 }
 
@@ -127,7 +130,12 @@ func isTextFile(file *object.File) bool {
 		log.Printf("Error opening %s: %v\n", file.Name, err)
 		return false
 	}
-	defer fileReader.Close()
+	defer func(fileReader io.ReadCloser) {
+		err := fileReader.Close()
+		if err != nil {
+			log.Fatalln("[!] Error deferring File Reader")
+		}
+	}(fileReader)
 
 	buffer := make([]byte, 261) // Read the first 261 bytes for magic number detection
 	_, err = fileReader.Read(buffer)
