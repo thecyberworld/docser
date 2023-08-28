@@ -1,6 +1,7 @@
 package scan_engine
 
 import (
+	"fmt"
 	"io"
 	"log"
 
@@ -18,13 +19,10 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 	configFunc := repository.Config
 
 	// Call the repository.Config function to get the configuration and error
-	repoConfig, err := configFunc()
+	_, err := configFunc()
 	if err != nil {
 		log.Printf("Error getting repository configuration: %v\n", err)
 		return
-	}
-	for branch := range repoConfig.Branches {
-		log.Println("Branch ", branch)
 	}
 
 	// Open the repository's HEAD reference to get the reference's hash
@@ -63,8 +61,7 @@ func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbin
 	return commitIter.ForEach(func(commitObj *object.Commit) error {
 		log.Println("Commit:", commitObj.Hash)
 
-		foundBranch := getBranchName(commitObj.Hash, refs)
-		log.Println("Belongs to branch:", foundBranch)
+		_ = getBranchName(commitObj.Hash, refs)
 
 		// Access and process the files in the commit
 		err := processCommitFiles(commitObj)
@@ -97,7 +94,11 @@ func processCommitFiles(commitObj *object.Commit) error {
 	defer fileIter.Close()
 
 	return fileIter.ForEach(func(file *object.File) error {
-		log.Println("File:", file.Name)
+
+		result, err := patterns.ProcessTextFileContentsWithRegex(file)
+		if (err == nil) && (len(result) != 0) {
+			fmt.Println("File:", file.Name)
+		}
 
 		// Check if the file extension corresponds to text-based formats
 		if isTextFile(file) {
@@ -106,10 +107,7 @@ func processCommitFiles(commitObj *object.Commit) error {
 			if err != nil {
 				return err
 			}
-		} else {
-			log.Println("Binary file - skipping contents.")
 		}
-
 		return nil
 	})
 }
@@ -137,9 +135,10 @@ func isTextFile(file *object.File) bool {
 		}
 	}(fileReader)
 
-	buffer := make([]byte, 261) // Read the first 261 bytes for magic number detection
-	_, err = fileReader.Read(buffer)
-	if err != nil {
+	bufferSize := 261
+	buffer := make([]byte, bufferSize) // Read the first 261 bytes for magic number detection
+	bufLen, err := fileReader.Read(buffer)
+	if (err != nil) && (bufLen > bufferSize) {
 		log.Printf("Error reading %s: %v\n", file.Name, err)
 		return false
 	}
