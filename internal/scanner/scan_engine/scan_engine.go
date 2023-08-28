@@ -60,8 +60,6 @@ func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbin
 
 	return commitIter.ForEach(func(commitObj *object.Commit) error {
 
-		_ = getBranchName(commitObj.Hash, refs)
-
 		// Access and process the files in the commit
 		err := processCommitFiles(commitObj)
 		if err != nil {
@@ -70,18 +68,6 @@ func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbin
 
 		return nil
 	})
-}
-
-// getBranchName returns the name of the branch that the commit belongs to
-func getBranchName(commitHash plumbing.Hash, refs []*plumbing.Reference) string {
-	foundBranch := "Unknown"
-	for _, ref := range refs {
-		if ref.Hash() == commitHash {
-			foundBranch = ref.Name().Short()
-			break
-		}
-	}
-	return foundBranch
 }
 
 // processCommitFiles accesses and processes the files in the commit
@@ -93,32 +79,24 @@ func processCommitFiles(commitObj *object.Commit) error {
 	defer fileIter.Close()
 
 	return fileIter.ForEach(func(file *object.File) error {
-
-		result, err := patterns.ProcessTextFileContentsWithRegex(file)
-		if (err == nil) && (len(result) != 0) {
-			fmt.Println(commitObj.Hash)
-			fmt.Println("File:", file.Name)
-		}
-
-		// Check if the file extension corresponds to text-based formats
+		// Check if the file type corresponds to text-based formats
 		if isTextFile(file) {
-			// Access and process the contents of the file
-			err := processTextFileContents(file)
+			results, err := patterns.ProcessTextFileContentsWithRegex(file)
+
+			if (err == nil) && (len(results) != 0) {
+				fmt.Println("Hash:", commitObj.Hash)
+				fmt.Println("File:", file.Name)
+				for _, result := range results {
+					fmt.Println("Results:", result)
+				}
+			}
+
 			if err != nil {
 				return err
 			}
 		}
 		return nil
 	})
-}
-
-// processTextFileContents call file processing and regex matching function
-func processTextFileContents(file *object.File) error {
-	result, err := patterns.ProcessTextFileContentsWithRegex(file)
-	if (err == nil) && (len(result) != 0) {
-		log.Println("Result", result)
-	}
-	return nil
 }
 
 // isTextFile checks if the file extension corresponds to a text-based format by checking magic byte of the file
