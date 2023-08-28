@@ -59,7 +59,6 @@ func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbin
 	defer commitIter.Close()
 
 	return commitIter.ForEach(func(commitObj *object.Commit) error {
-		log.Println("Commit:", commitObj.Hash)
 
 		_ = getBranchName(commitObj.Hash, refs)
 
@@ -97,6 +96,7 @@ func processCommitFiles(commitObj *object.Commit) error {
 
 		result, err := patterns.ProcessTextFileContentsWithRegex(file)
 		if (err == nil) && (len(result) != 0) {
+			fmt.Println(commitObj.Hash)
 			fmt.Println("File:", file.Name)
 		}
 
