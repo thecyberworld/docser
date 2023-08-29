@@ -19,7 +19,7 @@ func main() {
 		showHelpMenu()
 		os.Exit(0)
 	}
-
+	printBanner()
 	repositoryPath := *pRepoLocation
 	if repositoryPath != "" {
 		scanner.InitiateScanandValidatePath(repositoryPath)
@@ -31,4 +31,13 @@ func main() {
 func showHelpMenu() {
 	fmt.Println("Usage: docser -d /path/to/directory ")
 	flag.PrintDefaults()
+}
+
+func printBanner() {
+	fmt.Println("")
+	banner := "o-o                        \n|  \\                       \n|   O o-o  o-o o-o o-o o-o \n|  /  | | |     \\  |-' |   \no-o   o-o  o-o o-o o-o o   \n                           \n                           "
+	fmt.Println(banner)
+	fmt.Println("by 0xFTW")
+	fmt.Println("")
+	fmt.Println("")
 }
