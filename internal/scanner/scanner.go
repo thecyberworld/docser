@@ -30,7 +30,17 @@ func isGitRepository(repositoryPath string) bool {
 	return true
 }
 
-func InitiateScanandValidatePath(repositoryPath string) {
+func ParseConfigAndInitiateScan(configFile string, repositoryPath string) {
+	if configFile == "" {
+		if repositoryPath != "" {
+			initiateScanAndValidatePath(repositoryPath)
+		} else {
+			initiateScanAndValidatePath(".")
+		}
+	}
+}
+
+func initiateScanAndValidatePath(repositoryPath string) {
 	if repositoryPath == "." {
 		if isGitRepository(repositoryPath) {
 			log.Printf("[+] Initiating Scan in current directory.\n")
