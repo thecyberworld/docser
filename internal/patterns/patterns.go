@@ -2,8 +2,11 @@ package patterns
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"io"
+	"log"
 	"regexp"
 )
 
@@ -15,9 +18,14 @@ type MatchResult struct {
 	Pattern     string
 }
 
-// Config defines the structure of the TOML config file
+// PatternConfig defines the structure of the TOML config file
+type PatternConfig struct {
+	Regex string `toml:"regex"`
+	Name  string `toml:"name"`
+}
+
 type Config struct {
-	Patterns map[string]string `toml:"patterns"`
+	Patterns []PatternConfig `toml:"patterns"`
 }
 
 // ProcessTextFileContentsWithRegex reads and processes the contents of a text-based file using regex patterns
@@ -26,7 +34,12 @@ func ProcessTextFileContentsWithRegex(file *object.File, configFile string) ([]M
 	if err != nil {
 		return nil, err
 	}
-	defer fileReader.Close()
+	defer func(fileReader io.ReadCloser) {
+		err := fileReader.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(fileReader)
 
 	var matchResults []MatchResult
 
@@ -81,11 +94,16 @@ func loadPatternsFromConfigFile(configFile string) ([]DefinePatternInfo, error) 
 		return nil, err
 	}
 
+	fmt.Println("Loaded patterns from TOML config:")
+	for _, pattern := range config.Patterns {
+		fmt.Printf("Pattern: %s\n", pattern.Regex)
+	}
+
 	var configPatterns []DefinePatternInfo
 
 	// Compile the regex patterns from the config file
-	for _, patternStr := range config.Patterns {
-		regex, err := regexp.Compile(patternStr)
+	for _, pattern := range config.Patterns {
+		regex, err := regexp.Compile(pattern.Regex)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +111,7 @@ func loadPatternsFromConfigFile(configFile string) ([]DefinePatternInfo, error) 
 		// Create a DefinePatternInfo and add it to the configPatterns slice
 		configPattern := DefinePatternInfo{
 			Pattern:     regex,
-			Description: "Config Pattern", // You can set a default description here
+			Description: pattern.Name,
 		}
 
 		configPatterns = append(configPatterns, configPattern)

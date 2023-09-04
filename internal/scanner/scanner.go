@@ -31,12 +31,10 @@ func isGitRepository(repositoryPath string) bool {
 }
 
 func ParseConfigAndInitiateScan(configFile string, repositoryPath string) {
-	if configFile == "" {
-		if repositoryPath != "" {
-			initiateScanAndValidatePath(repositoryPath, "")
-		} else {
-			initiateScanAndValidatePath(".", "")
-		}
+	if repositoryPath != "" {
+		initiateScanAndValidatePath(repositoryPath, configFile)
+	} else {
+		initiateScanAndValidatePath(".", configFile)
 	}
 }
 
