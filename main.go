@@ -10,7 +10,7 @@ import (
 func main() {
 
 	pRepoLocation := flag.String("d", "", "Directory to be scanned. (Default is current directory)")
-
+	pConfigFile := flag.String("c", "", "Docser config file (Must end in .toml)")
 	showHelp := flag.Bool("h", false, "Displays help menu")
 
 	flag.Parse()
@@ -21,15 +21,12 @@ func main() {
 	}
 	printBanner()
 	repositoryPath := *pRepoLocation
-	if repositoryPath != "" {
-		scanner.InitiateScanandValidatePath(repositoryPath)
-	} else {
-		scanner.InitiateScanandValidatePath(".")
-	}
+	configFile := *pConfigFile
+	scanner.ParseConfigAndInitiateScan(configFile, repositoryPath)
 }
 
 func showHelpMenu() {
-	fmt.Println("Usage: docser -d /path/to/directory ")
+	fmt.Println("Usage: docser -d /path/to/directory -c /path/to/.docser.toml (Optional)")
 	flag.PrintDefaults()
 }
 
