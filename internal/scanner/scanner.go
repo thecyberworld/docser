@@ -33,28 +33,28 @@ func isGitRepository(repositoryPath string) bool {
 func ParseConfigAndInitiateScan(configFile string, repositoryPath string) {
 	if configFile == "" {
 		if repositoryPath != "" {
-			initiateScanAndValidatePath(repositoryPath)
+			initiateScanAndValidatePath(repositoryPath, "")
 		} else {
-			initiateScanAndValidatePath(".")
+			initiateScanAndValidatePath(".", "")
 		}
 	}
 }
 
-func initiateScanAndValidatePath(repositoryPath string) {
+func initiateScanAndValidatePath(repositoryPath string, configFile string) {
 	if repositoryPath == "." {
 		if isGitRepository(repositoryPath) {
 			log.Printf("[+] Initiating Scan in current directory.\n")
-			startScanEngine(repositoryPath)
+			startScanEngine(repositoryPath, configFile)
 		}
 	} else {
 		if isGitRepository(repositoryPath) {
 			log.Printf("[+] Initiating Scan in %s \n", repositoryPath)
-			startScanEngine(repositoryPath)
+			startScanEngine(repositoryPath, configFile)
 		}
 	}
 }
 
-func startScanEngine(repositoryPath string) {
+func startScanEngine(repositoryPath string, configFile string) {
 	repo, err := git.PlainOpen(repositoryPath)
 	if err != nil {
 		log.Printf("[!] Error opening repository: %v\n", err)
@@ -77,5 +77,5 @@ func startScanEngine(repositoryPath string) {
 		return
 	}
 	// Call the StartScanEngine function from the ScanEngine package
-	scan_engine.StartScanEngine(repo, plumbingRefs)
+	scan_engine.StartScanEngine(repo, plumbingRefs, configFile)
 }

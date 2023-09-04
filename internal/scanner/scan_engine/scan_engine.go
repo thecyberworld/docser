@@ -14,7 +14,7 @@ import (
 )
 
 // StartScanEngine is an exported function from the ScanEngine package
-func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
+func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference, configFile string) {
 	repository := *repo
 	configFunc := repository.Config
 
@@ -43,7 +43,7 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 	}
 
 	// Iterate through each commit in the repository
-	err = iterateCommits(repo, commit, refs)
+	err = iterateCommits(repo, commit, configFile)
 	if err != nil {
 		log.Printf("Error iterating commits: %v\n", err)
 		return
@@ -51,7 +51,7 @@ func StartScanEngine(repo *git.Repository, refs []*plumbing.Reference) {
 }
 
 // iterateCommits iterates through each commit and processes files
-func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbing.Reference) error {
+func iterateCommits(repo *git.Repository, commit *object.Commit, configFile string) error {
 	commitIter, err := repo.Log(&git.LogOptions{From: commit.Hash})
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbin
 	return commitIter.ForEach(func(commitObj *object.Commit) error {
 
 		// Access and process the files in the commit
-		err := processCommitFiles(commitObj)
+		err := processCommitFiles(commitObj, configFile)
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,7 @@ func iterateCommits(repo *git.Repository, commit *object.Commit, refs []*plumbin
 }
 
 // processCommitFiles accesses and processes the files in the commit
-func processCommitFiles(commitObj *object.Commit) error {
+func processCommitFiles(commitObj *object.Commit, configFile string) error {
 	fileIter, err := commitObj.Files()
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func processCommitFiles(commitObj *object.Commit) error {
 	return fileIter.ForEach(func(file *object.File) error {
 		// Check if the file type corresponds to text-based formats
 		if isTextFile(file) {
-			results, err := patterns.ProcessTextFileContentsWithRegex(file)
+			results, err := patterns.ProcessTextFileContentsWithRegex(file, configFile)
 
 			if (err == nil) && (len(results) != 0) {
 				fmt.Println("Hash:", commitObj.Hash)

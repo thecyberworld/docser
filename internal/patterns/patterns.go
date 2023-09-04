@@ -15,7 +15,7 @@ type MatchResult struct {
 }
 
 // ProcessTextFileContentsWithRegex reads and processes the contents of a text-based file using regex patterns
-func ProcessTextFileContentsWithRegex(file *object.File) ([]MatchResult, error) {
+func ProcessTextFileContentsWithRegex(file *object.File, configFile string) ([]MatchResult, error) {
 	fileReader, err := file.Reader()
 	if err != nil {
 		return nil, err
