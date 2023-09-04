@@ -2,7 +2,6 @@ package patterns
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/BurntSushi/toml"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"io"
@@ -48,7 +47,6 @@ func ProcessTextFileContentsWithRegex(file *object.File, configFile string) ([]M
 
 	// Load patterns from regex.go
 	allPatterns := append([]DefinePatternInfo{}, RegexPatterns...)
-
 	// Load additional patterns from the config file
 	if configFile != "" {
 		configPatterns, err := loadPatternsFromConfigFile(configFile)
@@ -92,11 +90,6 @@ func loadPatternsFromConfigFile(configFile string) ([]DefinePatternInfo, error) 
 	_, err := toml.DecodeFile(configFile, &config)
 	if err != nil {
 		return nil, err
-	}
-
-	fmt.Println("Loaded patterns from TOML config:")
-	for _, pattern := range config.Patterns {
-		fmt.Printf("Pattern: %s\n", pattern.Regex)
 	}
 
 	var configPatterns []DefinePatternInfo
