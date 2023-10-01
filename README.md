@@ -42,10 +42,10 @@ Usage: docser -d /path/to/directory
 
 ## Plans for future
 
+- [x] Support for toml files for custom configuration
 - [ ] Logic to parse finding and show in similar to gitleaks.
 - [ ] Multi threading / concurrency for faster processing.
 - [ ] Support for remote git repository.
-- [ ] Support for toml files for custom configuration
 
 ## Contributing
 
