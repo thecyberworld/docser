@@ -14,6 +14,7 @@ import (
 )
 
 type Release struct {
+	Message    string `json:"message"`
 	Name       string `json:"name"`
 	TagName    string `json:"tag_name"`
 	TarballURL string `json:"tarball_url"`
@@ -57,6 +58,12 @@ func Start(currentVersion, owner, repo string) {
 	}
 	defer resp.Body.Close()
 
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Unable to find the latest release, exiting.")
+		return
+	}
+
 	// Parse the release JSON and store it in the Release struct
 	var r Release
 	err = json.NewDecoder(resp.Body).Decode(&r)
@@ -71,7 +78,7 @@ func Start(currentVersion, owner, repo string) {
 		return
 	}
 
-	// Download and build the new release
+	// Download the tarball, extract it, and build the binary
 	err = downloadAndBuild(r.TarballURL, tempDir)
 	if err != nil {
 		fmt.Println("Error when downloading and building:", err)
@@ -103,11 +110,13 @@ func Start(currentVersion, owner, repo string) {
 func downloadAndBuild(url, tempDir string) error {
 	tarballPath := filepath.Join(tempDir, "docser.tar.gz")
 
-	_, err := downloadTarball(url, tarballPath)
+	// Download the tarball
+	err := downloadTarball(url, tarballPath)
 	if err != nil {
 		return fmt.Errorf("error whilst downloading tarball: %w", err)
 	}
 
+	// Extract the tarball
 	extractedPath := filepath.Join(tempDir, "docser")
 	err = extractTarball(tarballPath, extractedPath)
 	if err != nil {
@@ -126,6 +135,7 @@ func downloadAndBuild(url, tempDir string) error {
 
 	binaryPath := filepath.Join(tempDir, "docser")
 
+	// Build the binary
 	cmd := exec.Command("go", "build", "-o", binaryPath)
 	cmd.Dir = directories[0]
 	cmd.Stdout = os.Stdout
@@ -149,27 +159,34 @@ func downloadAndBuild(url, tempDir string) error {
 //     directory should be writable.
 //
 // Returns:
-// - A string containing the path where the tarball was saved if the download is successful.
 // - An error if there was an issue accessing the URL, creating the destination file, or writing to it.
-func downloadTarball(url string, dest string) (string, error) {
+func downloadTarball(url string, dest string) error {
+	// Download the tarball
 	resp, err := http.Get(url)
 	if err != nil {
-		return "", err
+		return fmt.Errorf("unable to download tarball: %w", err)
 	}
 	defer resp.Body.Close()
 
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unable to download tarball: %s", url)
+	}
+
+	// Create the destination file
 	file, err := os.Create(dest)
 	if err != nil {
-		return "", fmt.Errorf("unable to create file: %w", err)
+		return fmt.Errorf("unable to create file: %w", err)
 	}
 	defer file.Close()
 
+	// Copy the response body to the destination file
 	_, err = io.Copy(file, resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("unable to copy file: %w", err)
+		return fmt.Errorf("unable to copy file: %w", err)
 	}
 
-	return dest, nil
+	return nil
 }
 
 // extractTarball extracts the contents of a gzipped tarball located at the specified file path
@@ -189,18 +206,22 @@ func downloadTarball(url string, dest string) (string, error) {
 //   - An error if there is an issue opening the tarball, reading its contents, creating a gzip reader,
 //     or writing extracted files and directories to the destination directory.
 func extractTarball(tarball string, dest string) error {
+	// Open the tarball file
 	file, err := os.Open(tarball)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
+	// Create a gzip reader
 	gzr, err := gzip.NewReader(file)
 	if err != nil {
 		return fmt.Errorf("unable to create gzip reader: %w", err)
 	}
 	defer gzr.Close()
 
+	// Create a tar reader and iterate over the tarball contents
+	// Extract each file and directory to the destination directory
 	tr := tar.NewReader(gzr)
 
 	for {
@@ -251,23 +272,27 @@ func extractTarball(tarball string, dest string) error {
 //   - If it fails at any step, such as opening the source file, creating the destination file, copying
 //     the content, or syncing the written content to storage, it returns an error detailing what went wrong.
 func copyFile(src, dst string) error {
+	// Open the source file
 	input, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("unable to open source file: %w", err)
 	}
 	defer input.Close()
 
+	// Create the destination file
 	output, err := os.Create(dst)
 	if err != nil {
 		return fmt.Errorf("unable to create destination file: %w", err)
 	}
 	defer output.Close()
 
+	// Copy the source file to the destination file
 	_, err = io.Copy(output, input)
 	if err != nil {
 		return fmt.Errorf("unable to copy file: %w", err)
 	}
 
+	// Sync the destination file
 	err = output.Sync()
 	if err != nil {
 		return fmt.Errorf("unable to sync file: %w", err)

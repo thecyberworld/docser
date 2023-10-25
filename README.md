@@ -40,6 +40,22 @@ Usage: docser -d /path/to/directory
   -h    Displays help menu
 ```
 
+#### Upgrade
+
+You can upgrade the client to the latest version using the following command.
+
+```
+$ ./docser --upgrade
+Application upgraded successfully.
+```
+
+If you are already using the latest version, you will see the following message.
+
+```
+./docser --upgrade
+You are using the latest version.
+```
+
 ## Plans for future
 
 - [x] Support for toml files for custom configuration
