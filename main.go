@@ -2,15 +2,23 @@ package main
 
 import (
 	"docser/internal/scanner"
+	"docser/internal/upgrade"
 	"flag"
 	"fmt"
 	"os"
+)
+
+const (
+	owner          = "thecyberworld"
+	repo           = "docser"
+	currentVersion = "v0.1.0"
 )
 
 func main() {
 
 	pRepoLocation := flag.String("d", "", "Directory to be scanned. (Default is current directory)")
 	pConfigFile := flag.String("c", "", "Docser config file (Must end in .toml)")
+	pUpgrade := flag.Bool("upgrade", false, "Upgrade Docser to latest version")
 	showHelp := flag.Bool("h", false, "Displays help menu")
 
 	flag.Parse()
@@ -19,6 +27,12 @@ func main() {
 		showHelpMenu()
 		os.Exit(0)
 	}
+
+	if *pUpgrade {
+		upgrade.Start(currentVersion, owner, repo)
+		return
+	}
+
 	printBanner()
 	repositoryPath := *pRepoLocation
 	configFile := *pConfigFile
@@ -26,7 +40,7 @@ func main() {
 }
 
 func showHelpMenu() {
-	fmt.Println("Usage: docser -d /path/to/directory -c /path/to/.docser.toml (Optional)")
+	fmt.Println("Usage: docser -d /path/to/directory -c /path/to/.docser.toml (Optional) -upgrade (Optional) -h (Optional)")
 	flag.PrintDefaults()
 }
 
